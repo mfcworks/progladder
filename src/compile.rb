@@ -4,7 +4,7 @@ require 'optparse'
 require 'Compiler'
 
 # How to use:
-#	ruby compile.rb OUTPUT.csv -i INPUT.txt
+#  ruby compile.rb OUTPUT.csv -i INPUT.txt
 
 input_file = ''
 output_file = ''
@@ -28,6 +28,6 @@ end
 
 compiler = Compiler.new
 if input_file != "" && output_file != ""
-	compiler.from_file(input_file).compile.format.save_to_file(output_file)
+    compiler.from_file(input_file).compile.format.save_to_file(output_file)
 else
 end
