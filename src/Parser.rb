@@ -103,7 +103,7 @@ class Parser
                 output.push ValueNode.new(ary)
             elsif token == Token::CLOSEBRACE
                 raise "ParseError : 対応しない ] が見つかりました。"
-            elsif token == Token::OUT || token == Token::OUTH
+            elsif token == Token::OUT
                 # 演算子スタックの中身をすべて出力キューに追加する。
                 while !(op_stack.empty?)
                     output.push op_stack.pop
@@ -115,6 +115,7 @@ class Parser
                 end
                 ast = generate_tree(elems)
                 # -> の直後はデバイスか応用命令であるはず。
+                # -> の直後が `(` の場合も終わるまで取得する
                 t = tokens.shift
                 if t == Token::OPENBRACE
                     ary = []
@@ -125,24 +126,40 @@ class Parser
                         ary.push t
                     end
                     output.push OperatorNode.new(ast, token, ValueNode.new(ary))
+                elsif t == Token::OPENPAREN
+                    ary = []
+                    t = tokens[0]
+                    if t.identifier? && t.value == "H"
+                        tokens.shift
+                        ary.push "OUTH"
+                    else
+                        ary.push "OUT"
+                    end
+                    loop do
+                        t = tokens.shift
+                        raise "ParseError : 対応する ) が見つかりません。" if t == nil
+                        break if t == Token::CLOSEPAREN
+                        ary.push t
+                    end
+                    output.push OperatorNode.new(ast, token, ValueNode.new(ary))
                 else
                     dev = t
                     if dev == nil || !dev.identifier? || dev.association_instruction?
                         raise "ParseError : OUTの直後にデバイスがありません。"
                     end
-                    tc_set = nil
-                    if dev.timer_or_counter?
-                        tc_set = tokens.shift
-                        if tc_set == nil || !tc_set.identifier?
-                            raise "ParseError : タイマ・カウンタの設定値デバイスがありません。"
-                        end
-                    end
-                    if tc_set == nil
+#                    tc_set = nil
+#                    if dev.timer_or_counter?
+#                        tc_set = tokens.shift
+#                        if tc_set == nil || !tc_set.identifier?
+#                            raise "ParseError : タイマ・カウンタの設定値デバイスがありません。"
+#                        end
+#                    end
+#                    if tc_set == nil
                         output.push OperatorNode.new(ast, token, ValueNode.new(dev))
-                    else
-                        # 応用命令との区別のために、TC設定値付きの場合は配列の先頭に"OUT"を入れる
-                        output.push OperatorNode.new(ast, token, ValueNode.new(["OUT", dev, tc_set]))
-                    end
+#                    else
+#                        # 応用命令との区別のために、TC設定値付きの場合は配列の先頭に"OUT"を入れる
+#                        output.push OperatorNode.new(ast, token, ValueNode.new(["OUT", dev, tc_set]))
+#                    end
                 end
             elsif token == Token::AND
                 while (op_stack.last == Token::AND)

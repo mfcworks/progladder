@@ -128,14 +128,13 @@ class CodeGen
                 cmd[0] = "OR" + cmd[0]
                 @il.push cmd
             end
-        elsif op == Token::OUT || op == Token::OUTH
+        elsif op == Token::OUT
             if value.class != Array
                 # 出力コイル
                 @il.push ["OUT", value.value]
-            elsif value[0] == "OUT"
+            elsif value[0] == "OUT" || value[0] == "OUTH"
                 # タイマ・カウンタ
-                instruction = (op == Token::OUT) ? "OUT" : "OUTH"
-                @il.push [instruction, value[1].value, value[2].value]
+                @il.push [value[0], value[1].value, value[2].value]
             else
                 # 応用命令
                 cmd = value.map { |e| e.value }

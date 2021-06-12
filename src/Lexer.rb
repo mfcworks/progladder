@@ -57,6 +57,7 @@ class Token
         ["INV", "MEP", "MEF"].include?(@value)
     end
 
+    # @deprecated
     # デバイスがタイマまたはカウンタであるか？
     def timer_or_counter?
         if !identifier? || association_instruction?
@@ -88,7 +89,6 @@ class Token
     AND = Token.newSymbol("&")
     OR = Token.newSymbol("|")
     OUT = Token.newSymbol("->")
-    OUTH = Token.newSymbol("->H") # 高速タイマ専用
     OPENPAREN = Token.newSymbol("(")
     CLOSEPAREN = Token.newSymbol(")")
     OPENBRACE = Token.newSymbol("[")
@@ -96,7 +96,7 @@ class Token
     SEMICOLON = Token.newSymbol(";")
 
     def self.get_symbol(str)
-        [AND, OR, OUT, OUTH, OPENPAREN, CLOSEPAREN, OPENBRACE, CLOSEBRACE, SEMICOLON].each do |s|
+        [AND, OR, OUT, OPENPAREN, CLOSEPAREN, OPENBRACE, CLOSEBRACE, SEMICOLON].each do |s|
             return s if s.value == str
         end
         raise "TokenError : #{str} is not a symbol"
@@ -122,7 +122,7 @@ class Lexer
     # Group 2 : Comment starting with '#' -> Ignore.
     # Group 3 : Tag
     # Group 4 : Symbol
-    PATTERN = /\s*((#.*)|(\*[0-9]+)|(&|\||->H?|\(|\)|\[|\]|;)|[A-Za-z$]*(?:[<>=]+|[+\-\*\/])[A-Za-z]*|!?[@%]?[A-Za-z$][A-Za-z0-9$\.\\]*|"(\\"|\\|[^"])*")/
+    PATTERN = /\s*((#.*)|(\*[0-9]+)|(&|\||->|\(|\)|\[|\]|;)|[A-Za-z$]*(?:[<>=]+|[+\-\*\/])[A-Za-z]*|!?[@%]?[A-Za-z$][A-Za-z0-9$\.\\]*|"(\\"|\\|[^"])*")/
 
     def initialize(source_multiline)
         @source_lines = source_multiline.split("\n")
