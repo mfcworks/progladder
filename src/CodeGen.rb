@@ -92,7 +92,7 @@ class CodeGen
             end
         else
             cmd = ast.value.dup
-            cmd[0] = "LD" + cmd[0]
+            cmd[0] = "LD" + cmd[0] if ast.value.length > 1
             @il.push cmd
         end
     end
@@ -111,7 +111,7 @@ class CodeGen
                 @il.push [instruction, device]
             else
                 cmd = value.map { |e| e.value }
-                cmd[0] = "AND" + cmd[0]
+                cmd[0] = "AND" + cmd[0] if value.length > 1
                 @il.push cmd
             end
         elsif op == Token::OR
@@ -125,7 +125,7 @@ class CodeGen
                 @il.push [instruction, device]
             else
                 cmd = value.map { |e| e.value }
-                cmd[0] = "OR" + cmd[0]
+                cmd[0] = "OR" + cmd[0] if value.length > 1
                 @il.push cmd
             end
         elsif op == Token::OUT

@@ -34,21 +34,22 @@ class Parser
         while tokens.length > 0
             token = tokens.shift
             if token.identifier?
-                # 値か結合命令
-                if token.association_instruction?
-                    # 結合命令(INV等々)の場合
-                    # ！特異的な処理のため要注意！
-                    # 1) 演算子スタックに AND があったら出力キューに移動する。
-                    # 2) 結合命令を出力キューに追加する。
-                    while op_stack.last == Token::AND
-                        output.push op_stack.pop
-                    end
-                    output.push token
-                else
+                # 値のみ
+#                # 値か結合命令
+#                if token.association_instruction?
+#                    # 結合命令(INV等々)の場合
+#                    # ！特異的な処理のため要注意！
+#                    # 1) 演算子スタックに AND があったら出力キューに移動する。
+#                    # 2) 結合命令を出力キューに追加する。
+#                    while op_stack.last == Token::AND
+#                        output.push op_stack.pop
+#                    end
+#                    output.push token
+#                else
                     # 値の場合：トークンをValueNodeにして出力キューに突っ込む
                     raise "ParseError : Invalid flag_semicolon" if flag_semicolon
                     output.push ValueNode.new(token)
-                end
+#                end
             elsif token.tag?
                 # *タグ
                 # セミコロンの直後のタグかどうか
