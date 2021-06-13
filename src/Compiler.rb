@@ -1,6 +1,6 @@
-require 'Lexer'
-require 'Parser'
-require 'CodeGen'
+require_relative 'Lexer'
+require_relative 'Parser'
+require_relative 'CodeGen'
 
 class Compiler
 
@@ -30,14 +30,16 @@ class Compiler
 
     def compile
         lexer = Lexer.new(@src_string)
-        parser = Parser.new(lexer)
+        token_list = lexer.lex
+        parser = Parser.new(token_list)
+        parsed_ast = parser.parse
 
-        @il = []
-        while true
-            parsed = parser.parse
-            break if parsed == nil
-            @il += CodeGen.generate_all(parsed)
-        end
+        @il = Codegen.generate_all(parsed_ast)
+#        while true
+#            parsed = parser.parse
+#            break if parsed == nil
+#            @il += CodeGen.generate_all(parsed)
+#        end
         # 最後にEND命令を加える。
         @il.push ["END"]
 

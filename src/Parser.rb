@@ -1,18 +1,16 @@
-
-
-require 'Lexer'
-require 'TreeNode'
+require_relative 'Lexer'
+require_relative 'TreeNode'
 
 
 class Parser
 
-    def initialize(lexer)
-        @lexer = lexer
+    def initialize(token_list)
+        @token_list = token_list
     end
 
     # パーサのメインメソッド
-    def parse
-        tokens = @lexer.lex_line
+    def parse(sub=false)
+        tokens = @token_list
 
         #パース開始時にトークンがなければnilを返す
         return nil if tokens == nil
@@ -104,6 +102,17 @@ class Parser
                 output.push ValueNode.new(ary)
             elsif token == Token::CLOSEBRACE
                 raise "ParseError : 対応しない ] が見つかりました。"
+            elsif token == Token::OPENBRACKET
+                res = []
+                loop do
+                    res += self.parse(true) # 再帰的にパースを行なう
+                    raise "ParseError : 対応する } が見つかりません。" if tokens.length == 0
+                    break if tokens[0] == Token::CLOSEBRACKET
+                end
+                tokens.shift
+                output.push BranchNode.new(res)
+            elsif token == Token::CLOSEBRACKET
+                raise "ParseError : 対応しない } が見つかりました。"
             elsif token == Token::OUT
                 # 演算子スタックの中身をすべて出力キューに追加する。
                 while !(op_stack.empty?)
@@ -173,21 +182,24 @@ class Parser
                 end
                 op_stack.push token
             elsif token == Token::SEMICOLON
-                # TODO
+                # 行の終わり
 #                raise "デバッグ：セミコロンが見つかりました"
-                flag_semicolon = true # セミコロンフラグを立てておく
+#                flag_semicolon = true # セミコロンフラグを立てておく
+                next if output.length == 0 # 空行は無視
                 if output.length == 1
                     # 構文木を完成品置き場へ移動
                     completed.push output.pop
+                    return completed if sub # 再帰呼び出しの場合はここで return する
                 else
-                    raise "ParseError : output length != 1"
+                    raise "ParseError : output length(#{output.length}) != 1" if tokens.length != 0
                 end
                 if tokens.length == 0
-                    lexed = @lexer.lex_line
-                    if lexed == nil
-                        raise "LexerError : 構文の最後が;で終わっています。"
-                    end
-                    tokens = lexed
+                    break
+#                    lexed = @lexer.lex_line
+#                    if lexed == nil
+#                        raise "LexerError : 構文の最後が;で終わっています。"
+#                    end
+#                    tokens = lexed
                 end
             elsif token.statement?
                 completed.push token.value
@@ -200,7 +212,18 @@ class Parser
             # 行間ステートメントの場合、完成品置き場にStringをそのまま送る
             completed.push output.pop
         else
-            raise "ParseError : output length != 1"
+                # 演算子スタックの中身をすべて出力キューに追加する。
+                while !(op_stack.empty?)
+                    output.push op_stack.pop
+                end
+                # 出力キューの要素から構文木を構築する。
+                elems = []
+                while !(output.empty?)
+                    elems.push output.shift
+                end
+                completed.push generate_tree(elems)
+
+#            raise "ParseError : output length != 1"
         end
 
         # 最後のMRDをMPPにする

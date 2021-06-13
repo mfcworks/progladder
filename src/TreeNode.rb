@@ -65,6 +65,17 @@ class FunctionNode < TreeNode
     end
 end
 
+# 分枝のノード( { ... } )
+class BranchNode < TreeNode
+    def initialize(data)
+        super()
+        @data = data
+    end
+
+    def inspect
+        @data
+    end
+end
 
 # オブジェクトがTreeNodeかの判定方法
 # puts <obj>.is_a?(TreeNode)

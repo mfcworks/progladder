@@ -3,8 +3,8 @@
 #
 
 class Token
-    def initialize(value, no_upcase=false)
-        @value = no_upcase ? value : value.upcase # ここで全て大文字化しておく
+    def initialize(value, no_upcase=true)
+        @value = no_upcase ? value : value.upcase
         @type_identifier = false
         @type_tag = false
         @type_statement = false
@@ -93,10 +93,12 @@ class Token
     CLOSEPAREN = Token.newSymbol(")")
     OPENBRACE = Token.newSymbol("[")
     CLOSEBRACE = Token.newSymbol("]")
+    OPENBRACKET = Token.newSymbol("{")
+    CLOSEBRACKET = Token.newSymbol("}")
     SEMICOLON = Token.newSymbol(";")
 
     def self.get_symbol(str)
-        [AND, OR, OUT, OPENPAREN, CLOSEPAREN, OPENBRACE, CLOSEBRACE, SEMICOLON].each do |s|
+        [AND, OR, OUT, OPENPAREN, CLOSEPAREN, OPENBRACE, CLOSEBRACE, OPENBRACKET, CLOSEBRACKET, SEMICOLON].each do |s|
             return s if s.value == str
         end
         raise "TokenError : #{str} is not a symbol"
@@ -122,13 +124,21 @@ class Lexer
     # Group 2 : Comment starting with '#' -> Ignore.
     # Group 3 : Tag
     # Group 4 : Symbol
-    PATTERN = /\s*((#.*)|(\*[0-9]+)|(&|\||->|\(|\)|\[|\]|;)|[A-Za-z$]*(?:[<>=]+|[+\-\*\/])[A-Za-z]*|!?[@%]?[A-Za-z$][A-Za-z0-9$\.\\]*|"(\\"|\\|[^"])*")/
+    PATTERN = /\s*((#.*)|(\*[0-9]+)|(&|\||->|\(|\)|\[|\]|{|}|;)|[A-Za-z$]*(?:[<>=]+|[+\-\*\/])[A-Za-z]*|!?[@%]?[A-Za-z$][A-Za-z0-9$\.\\]*|"(\\"|\\|[^"])*")/
 
     def initialize(source_multiline)
         @source_lines = source_multiline.split("\n")
     end
 
     def lex
+        token_list = []
+        loop do
+            tokens = lex_line()
+            break if tokens == nil
+            token_list += tokens
+            token_list.push Token::SEMICOLON
+        end
+        token_list
     end
 
     def lex_line
